@@ -739,6 +739,7 @@ void SymbolTableSection::addSymbol(Twine Name, uint8_t Bind, uint8_t Type,
   Size += this->EntrySize;
 }
 
+// NOTE(ghostway)
 Error SymbolTableSection::removeSectionReferences(
     bool AllowBrokenLinks, function_ref<bool(const SectionBase *)> ToRemove) {
   if (ToRemove(SectionIndexTable))
@@ -765,6 +766,7 @@ void SymbolTableSection::updateSymbols(function_ref<void(Symbol &)> Callable) {
   assignIndices();
 }
 
+// NOTE(ghostway)
 Error SymbolTableSection::removeSymbols(
     function_ref<bool(const Symbol &)> ToRemove) {
   Symbols.erase(

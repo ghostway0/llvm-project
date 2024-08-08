@@ -11,6 +11,7 @@
 #include "WasmReader.h"
 #include "WasmWriter.h"
 #include "llvm/ObjCopy/CommonConfig.h"
+#include "llvm/ObjCopy/wasm/WasmConfig.h"
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/FileOutputBuffer.h"
 
@@ -39,7 +40,7 @@ static bool isCommentSection(const Section &Sec) {
 
 static Error dumpSectionToFile(StringRef SecName, StringRef Filename,
                                Object &Obj) {
-  for (const Section &Sec : Obj.Sections) {
+  for (const Section &Sec : Obj.OpaqueSections) {
     if (Sec.Name == SecName) {
       ArrayRef<uint8_t> Contents = Sec.Contents;
       Expected<std::unique_ptr<FileOutputBuffer>> BufferOrErr =

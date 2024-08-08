@@ -1150,6 +1150,7 @@ void WasmObjectWriter::writeCustomRelocSections() {
   }
 }
 
+// NOTE(ghostway)
 void WasmObjectWriter::writeLinkingMetaDataSection(
     ArrayRef<wasm::WasmSymbolInfo> SymbolInfos,
     ArrayRef<std::pair<uint16_t, uint32_t>> InitFuncs,

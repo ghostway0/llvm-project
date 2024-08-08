@@ -10,6 +10,7 @@
 #define LLVM_LIB_OBJCOPY_WASM_WASMREADER_H
 
 #include "WasmObject.h"
+#include "llvm/Object/Wasm.h"
 
 namespace llvm {
 namespace objcopy {

@@ -380,6 +380,7 @@ struct WasmLocalDecl {
   uint32_t Count;
 };
 
+// NOTE(ghostway): function
 struct WasmFunction {
   uint32_t Index;
   uint32_t SigIndex;
@@ -478,6 +479,8 @@ struct WasmLinkingData {
   uint32_t Version;
   std::vector<WasmInitFunc> InitFunctions;
   std::vector<StringRef> Comdats;
+  // FIXME: datasegments
+
   // The linking section also contains a symbol table. This info (represented
   // in a WasmSymbolInfo struct) is stored inside the WasmSymbol object instead
   // of in this structure; this allows vectors of WasmSymbols and

@@ -1156,6 +1156,7 @@ Error WasmObjectFile::parseRelocSection(StringRef Name, ReadContext &Ctx) {
 }
 
 Error WasmObjectFile::parseCustomSection(WasmSection &Sec, ReadContext &Ctx) {
+  // wouldn't this be equivalent to return `res.takeError()`?
   if (Sec.Name == "dylink") {
     if (Error Err = parseDylinkSection(Ctx))
       return Err;
@@ -1320,6 +1321,7 @@ Error WasmObjectFile::parseImportSection(ReadContext &Ctx) {
   return Error::success();
 }
 
+// NOTE(ghostway)
 Error WasmObjectFile::parseFunctionSection(ReadContext &Ctx) {
   uint32_t Count = readVaruint32(Ctx);
   Functions.reserve(Count);
@@ -1921,6 +1923,7 @@ WasmObjectFile::getSymbolSection(DataRefImpl Symb) const {
   return section_iterator(SectionRef(Ref, this));
 }
 
+// NOTE(ghostway)
 uint32_t WasmObjectFile::getSymbolSectionId(SymbolRef Symb) const {
   const WasmSymbol &Sym = getWasmSymbol(Symb);
   return getSymbolSectionIdImpl(Sym);

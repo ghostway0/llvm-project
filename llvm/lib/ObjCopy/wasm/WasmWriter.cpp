@@ -7,11 +7,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "WasmWriter.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/BinaryFormat/Wasm.h"
 #include "llvm/Support/Endian.h"
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/LEB128.h"
 #include "llvm/Support/raw_ostream.h"
+#include <_types/_uint8_t.h>
+#include <optional>
 
 namespace llvm {
 namespace objcopy {
@@ -47,9 +50,9 @@ Writer::SectionHeader Writer::createSectionHeader(const Section &S,
 
 size_t Writer::finalize() {
   size_t ObjectSize = sizeof(WasmMagic) + sizeof(WasmVersion);
-  SectionHeaders.reserve(Obj.Sections.size());
+  SectionHeaders.reserve(Obj.OpaqueSections.size());
   // Finalize the headers of each section so we know the total size.
-  for (const Section &S : Obj.Sections) {
+  for (const Section &S : Obj.OpaqueSections) {
     size_t SectionSize;
     SectionHeaders.push_back(createSectionHeader(S, SectionSize));
     ObjectSize += SectionSize;
@@ -58,6 +61,13 @@ size_t Writer::finalize() {
 }
 
 Error Writer::write() {
+  // HACK
+  std::vector<uint8_t> LinkingSection = Obj.finalizeLinking();
+  *Obj.LinkingSection = {Obj.LinkingSection->SectionType,
+                         Obj.LinkingSection->HeaderSecSizeEncodingLen,
+                         Obj.LinkingSection->Name, LinkingSection,
+                         std::nullopt};
+
   size_t TotalSize = finalize();
   Out.reserveExtraSpace(TotalSize);
 
@@ -67,11 +77,15 @@ Error Writer::write() {
   support::endian::write32le(&Version, Obj.Header.Version);
   Out.write(reinterpret_cast<const char *>(&Version), sizeof(Version));
 
+  // write new linking section
+  // the old one is in `Obj.LinkingSection`.
+
   // Write each section.
   for (size_t I = 0, S = SectionHeaders.size(); I < S; ++I) {
     Out.write(SectionHeaders[I].data(), SectionHeaders[I].size());
-    Out.write(reinterpret_cast<const char *>(Obj.Sections[I].Contents.data()),
-              Obj.Sections[I].Contents.size());
+    Out.write(
+        reinterpret_cast<const char *>(Obj.OpaqueSections[I].Contents.data()),
+        Obj.OpaqueSections[I].Contents.size());
   }
 
   return Error::success();

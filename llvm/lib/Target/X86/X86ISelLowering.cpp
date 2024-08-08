@@ -49700,6 +49700,9 @@ static SDValue getBMIMatchingOp(unsigned Opc, SelectionDAG &DAG,
       if (isNullConstant(Op.getOperand(0)) && Op.getOperand(1) == OpMustEq)
         return DAG.getNode(Opc, DL, Op.getValueType(), OpMustEq, Op);
     }
+
+    // NOTE(ghostway)
+
     // Opc must be ISD::AND or ISD::XOR
     // BLSR: (and x, (sub x, 1))
     // BLSMSK: (xor x, (sub x, 1))
