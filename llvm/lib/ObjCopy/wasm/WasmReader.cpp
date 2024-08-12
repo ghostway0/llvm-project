@@ -9,6 +9,7 @@
 #include "WasmReader.h"
 #include "wasm/WasmObject.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/BinaryFormat/Wasm.h"
 #include "llvm/Object/Error.h"
 #include "llvm/Object/SymbolicFile.h"
@@ -100,6 +101,9 @@ Expected<std::unique_ptr<Object>> Reader::create() const {
       ReaderSec.Name = sectionTypeToString(ReaderSec.SectionType);
     }
   }
+
+  Obj->DataSegments.reserve(WasmObj.dataSegments().size());
+  llvm::copy(WasmObj.dataSegments(), Obj->DataSegments.begin());
 
   return std::move(Obj);
 }

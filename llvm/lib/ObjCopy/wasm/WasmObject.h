@@ -68,6 +68,7 @@ struct Object {
   std::vector<object::WasmSymbol> Symbols;
   std::vector<Section> OpaqueSections;
   llvm::wasm::WasmLinkingData LinkingData;
+  std::vector<object::WasmSegment> DataSegments;
 
   Section *LinkingSection = nullptr;
 

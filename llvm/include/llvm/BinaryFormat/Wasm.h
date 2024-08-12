@@ -479,7 +479,6 @@ struct WasmLinkingData {
   uint32_t Version;
   std::vector<WasmInitFunc> InitFunctions;
   std::vector<StringRef> Comdats;
-  // FIXME: datasegments
 
   // The linking section also contains a symbol table. This info (represented
   // in a WasmSymbolInfo struct) is stored inside the WasmSymbol object instead

@@ -9,6 +9,7 @@
 #include "WasmObject.h"
 
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/iterator_range.h"
@@ -19,6 +20,7 @@
 #include <MacTypes.h>
 #include <_types/_uint8_t.h>
 #include <algorithm>
+#include <iterator>
 #include <stack>
 #include <vector>
 
@@ -70,17 +72,25 @@ void Object::removeSections(function_ref<bool(const Section &)> ToRemove) {
       case wasm::WASM_SYMBOL_TYPE_TAG:
       case wasm::WASM_SYMBOL_TYPE_TABLE:
         Info.ElementIndex -= std::distance(MarkedSections.end(), Upper);
+        for (size_t I = *Upper; I < MarkedSections.size(); I++) {
+          Section &S = OpaqueSections[I];
+
+          size_t HeaderSize = S.HeaderSecSizeEncodingLen ? *S.HeaderSecSizeEncodingLen : 5;
+          Info.DataRef.Offset -= S.Contents.size() - HeaderSize;
+        }
         break;
       case wasm::WASM_SYMBOL_TYPE_DATA:
         if ((Info.Flags & wasm::WASM_SYMBOL_UNDEFINED) == 0) {
           for (size_t I = *Upper; I < MarkedSections.size(); I++) {
-            // this does not include the header. FIXME
-            Info.DataRef.Offset -= OpaqueSections[I].Contents.size();
+            Section &S = OpaqueSections[I];
+
+            size_t HeaderSize = S.HeaderSecSizeEncodingLen ? *S.HeaderSecSizeEncodingLen : 5;
+            Info.DataRef.Offset -= S.Contents.size() - HeaderSize;
           }
         }
         break;
       case wasm::WASM_SYMBOL_TYPE_SECTION: {
-        // FIXME: implement this
+        Sym.Info.ElementIndex -= std::distance(MarkedSections.end(), Upper);
         break;
       }
       default:
@@ -201,17 +211,16 @@ std::vector<uint8_t> Object::finalizeLinking() {
     Writer.endSubsection();
   }
 
-  // FIXME
-  // if (!LinkingData.DataSegments.empty()) {
-  //   startSection(SubSection, wasm::WASM_SEGMENT_INFO);
-  //   encodeULEB128(DataSegments.size(), W->OS);
-  //   for (const WasmDataSegment &Segment : DataSegments) {
-  //     writeString(Segment.Name);
-  //     encodeULEB128(Segment.Alignment, W->OS);
-  //     encodeULEB128(Segment.LinkingFlags, W->OS);
-  //   }
-  //   endSection(SubSection);
-  // }
+  if (!DataSegments.empty()) {
+    Writer.startSubsection(wasm::WASM_SEGMENT_INFO);
+    Writer.writeULEB128(DataSegments.size());
+    for (const object::WasmSegment &Segment : DataSegments) {
+      Writer.writeString(Segment.Data.Name);
+      Writer.writeULEB128(Segment.Data.Alignment);
+      Writer.writeULEB128(Segment.Data.LinkingFlags);
+    }
+    Writer.endSubsection();
+  }
 
   if (!LinkingData.InitFunctions.empty()) {
     Writer.startSubsection(wasm::WASM_INIT_FUNCS);
