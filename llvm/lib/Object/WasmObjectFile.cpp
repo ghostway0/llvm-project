@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <limits>
 
@@ -640,7 +641,7 @@ Error WasmObjectFile::parseLinkingSection(ReadContext &Ctx) {
       break;
     case wasm::WASM_SEGMENT_INFO: {
       uint32_t Count = readVaruint32(Ctx);
-      if (Count > DataSegments.size())
+      if (Count > DataSegments.size()) 
         return make_error<GenericBinaryError>("too many segment names",
                                               object_error::parse_failed);
       for (uint32_t I = 0; I < Count; I++) {
@@ -677,6 +678,7 @@ Error WasmObjectFile::parseLinkingSection(ReadContext &Ctx) {
       return make_error<GenericBinaryError>(
           "linking sub-section ended prematurely", object_error::parse_failed);
   }
+  printf("Linking section parsed size %lu\n", Ctx.Ptr - Ctx.Start);
   if (Ctx.Ptr != OrigEnd)
     return make_error<GenericBinaryError>("linking section ended prematurely",
                                           object_error::parse_failed);

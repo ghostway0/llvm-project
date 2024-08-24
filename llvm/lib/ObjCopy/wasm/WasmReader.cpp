@@ -18,6 +18,7 @@
 #include "llvm/Support/LEB128.h"
 #include <cassert>
 #include <cstdint>
+#include <cstdio>
 #include <optional>
 
 namespace llvm {
@@ -102,7 +103,7 @@ Expected<std::unique_ptr<Object>> Reader::create() const {
     }
   }
 
-  Obj->DataSegments.reserve(WasmObj.dataSegments().size());
+  Obj->DataSegments.resize(WasmObj.dataSegments().size());
   llvm::copy(WasmObj.dataSegments(), Obj->DataSegments.begin());
 
   return std::move(Obj);

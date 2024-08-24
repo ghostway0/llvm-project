@@ -8,12 +8,14 @@
 
 #include "WasmWriter.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/BinaryFormat/Wasm.h"
 #include "llvm/Support/Endian.h"
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/LEB128.h"
 #include "llvm/Support/raw_ostream.h"
 #include <_types/_uint8_t.h>
+#include <cstdio>
 #include <optional>
 
 namespace llvm {
@@ -64,10 +66,11 @@ Error Writer::write() {
   // HACK
   std::vector<uint8_t> LinkingSection = Obj.finalizeLinking();
   *Obj.LinkingSection = {Obj.LinkingSection->SectionType,
-                         Obj.LinkingSection->HeaderSecSizeEncodingLen,
+                         LinkingSection.size(),
                          Obj.LinkingSection->Name, LinkingSection,
                          std::nullopt};
 
+  printf("size %lu\n", LinkingSection.size());
   size_t TotalSize = finalize();
   Out.reserveExtraSpace(TotalSize);
 
@@ -76,9 +79,6 @@ Error Writer::write() {
   uint32_t Version;
   support::endian::write32le(&Version, Obj.Header.Version);
   Out.write(reinterpret_cast<const char *>(&Version), sizeof(Version));
-
-  // write new linking section
-  // the old one is in `Obj.LinkingSection`.
 
   // Write each section.
   for (size_t I = 0, S = SectionHeaders.size(); I < S; ++I) {
